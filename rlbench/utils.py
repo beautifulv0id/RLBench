@@ -281,6 +281,7 @@ def get_stored_demos(amount: int, image_paths: bool, dataset_root: str,
                     else:
                         obs[i].front_depth = None
 
+                # TODO: if image is resized, then the intrinsics should be updated 
                 if obs_config.left_shoulder_camera.point_cloud:
                     obs[i].left_shoulder_point_cloud = VisionSensor.pointcloud_from_depth_and_camera_params(
                         l_sh_depth_m,

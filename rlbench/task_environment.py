@@ -158,4 +158,5 @@ class TaskEnvironment(object):
 
     def reset_to_demo(self, demo: Demo) -> (List[str], Observation):
         demo.restore_state()
+        self._variation_number = demo.variation_number
         return self.reset()
