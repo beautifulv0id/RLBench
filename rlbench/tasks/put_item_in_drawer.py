@@ -7,6 +7,7 @@ from pyrep.objects.proximity_sensor import ProximitySensor
 from pyrep.objects.shape import Shape
 from rlbench.backend.conditions import DetectedCondition
 from rlbench.backend.task import Task
+from rlbench.backend.observation import Observation
 
 
 class PutItemInDrawer(Task):
@@ -20,6 +21,8 @@ class PutItemInDrawer(Task):
         self._waypoint1 = Dummy('waypoint2')
         self._item = Shape('item')
         self.register_graspable_objects([self._item])
+        self._keypoints = [Dummy('keypoint%s' % i) 
+                           for i in range(4)]
 
     def init_episode(self, index) -> List[str]:
         option = self._options[index]
@@ -38,3 +41,20 @@ class PutItemInDrawer(Task):
 
     def base_rotation_bounds(self) -> Tuple[List[float], List[float]]:
         return [0, 0, - np.pi / 8], [0, 0, np.pi / 8]
+
+    def decorate_observation(self, observation: Observation) -> Observation:
+        pcd = []
+        poses = []
+        for keypoint in self._keypoints:
+            H = keypoint.get_matrix()
+            rot, pos = H[:3, :3], H[:3, 3]
+            pcd.append(pos)
+            poses.append(H)
+            for ax in rot:
+                pcd.append(pos + 0.05 * ax)
+                pcd.append(pos - 0.05 * ax)
+        pcd = np.array(pcd)
+        poses = np.array(poses)
+        observation.misc['low_dim_pcd'] = pcd
+        observation.misc['low_dim_poses'] = poses
+        return observation

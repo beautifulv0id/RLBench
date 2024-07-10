@@ -8,6 +8,8 @@ from rlbench.backend.conditions import DetectedSeveralCondition
 from rlbench.backend.conditions import NothingGrasped
 from rlbench.backend.spawn_boundary import SpawnBoundary
 from rlbench.const import colors
+from rlbench.backend.observation import Observation
+import numpy as np
 
 MAX_STACKED_BLOCKS = 3
 DISTRACTORS = 4
@@ -32,6 +34,8 @@ class StackBlocks(Task):
         self.register_waypoint_ability_start(3, self._move_above_drop_zone)
         self.register_waypoint_ability_start(5, self._is_last)
         self.register_waypoints_should_repeat(self._repeat)
+        self._keypoints = [Dummy('keypoint%s' % i) 
+                           for i in range(9)]
 
     def init_episode(self, index: int) -> List[str]:
         # For each color, we want to have 2, 3 or 4 blocks stacked
@@ -102,3 +106,20 @@ class StackBlocks(Task):
     def _repeat(self):
         self.blocks_stacked += 1
         return self.blocks_stacked < self.blocks_to_stack
+
+    def decorate_observation(self, observation: Observation) -> Observation:
+        pcd = []
+        poses = []
+        for keypoint in self._keypoints:
+            H = keypoint.get_matrix()
+            rot, pos = H[:3, :3], H[:3, 3]
+            pcd.append(pos)
+            poses.append(H)
+            for ax in rot:
+                pcd.append(pos + 0.05 * ax)
+                pcd.append(pos - 0.05 * ax)
+        pcd = np.array(pcd)
+        poses = np.array(poses)
+        observation.misc['low_dim_pcd'] = pcd
+        observation.misc['low_dim_poses'] = poses
+        return observation
