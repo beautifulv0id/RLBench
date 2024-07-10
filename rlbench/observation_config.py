@@ -97,6 +97,13 @@ class ObservationConfig(object):
         self.wrist_camera.set_all(value)
         self.front_camera.set_all(value)
 
+    def uses_high_dim(self):
+        return any([self.left_shoulder_camera.rgb,
+                    self.right_shoulder_camera.rgb,
+                    self.overhead_camera.rgb,
+                    self.wrist_camera.rgb,
+                    self.front_camera.rgb])
+
     def set_all_low_dim(self, value: bool):
         self.joint_velocities = value
         self.joint_positions = value
@@ -108,3 +115,15 @@ class ObservationConfig(object):
         self.gripper_touch_forces = value
         self.wrist_camera_matrix = value
         self.task_low_dim_state = value
+
+    def uses_low_dim(self):
+        return any([self.joint_velocities,
+                    self.joint_positions,
+                    self.joint_forces,
+                    self.gripper_open,
+                    self.gripper_pose,
+                    self.gripper_matrix,
+                    self.gripper_joint_positions,
+                    self.gripper_touch_forces,
+                    self.wrist_camera_matrix,
+                    self.task_low_dim_state])
