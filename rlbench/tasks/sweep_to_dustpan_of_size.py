@@ -5,9 +5,11 @@ from rlbench.backend.task import Task
 from pyrep.objects.object import Object
 from pyrep.objects.dummy import Dummy
 from rlbench.backend.conditions import DetectedCondition
+from rlbench.backend.observation import Observation
+import numpy as np
 
 DIRT_NUM = 5
-
+KEYPOINT_NUM = 9
 
 class SweepToDustpanOfSize(Task):
 
@@ -26,6 +28,10 @@ class SweepToDustpanOfSize(Task):
                 Dummy('point2b'),
                 Dummy('point2c')]
         }
+
+        self._keypoints = [Dummy('keypoint%s' % i) 
+                           for i in range(KEYPOINT_NUM)]
+
 
     def init_episode(self, index: int) -> List[str]:
         self._variation_index = index
@@ -54,3 +60,20 @@ class SweepToDustpanOfSize(Task):
 
     # def boundary_root(self) -> Object:
     #     return Shape('boundary_root')
+
+    def decorate_observation(self, observation: Observation) -> Observation:
+        pcd = []
+        poses = []
+        for keypoint in self._keypoints:
+            H = keypoint.get_matrix()
+            rot, pos = H[:3, :3], H[:3, 3]
+            pcd.append(pos)
+            poses.append(H)
+            for ax in rot:
+                pcd.append(pos + 0.05 * ax)
+                pcd.append(pos - 0.05 * ax)
+        pcd = np.array(pcd)
+        poses = np.array(poses)
+        observation.misc['low_dim_pcd'] = pcd
+        observation.misc['low_dim_poses'] = poses
+        return observation

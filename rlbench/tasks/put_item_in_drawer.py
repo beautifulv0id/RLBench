@@ -9,6 +9,7 @@ from rlbench.backend.conditions import DetectedCondition
 from rlbench.backend.task import Task
 from rlbench.backend.observation import Observation
 
+KEYPOINT_NUM = 4
 
 class PutItemInDrawer(Task):
 
@@ -22,7 +23,7 @@ class PutItemInDrawer(Task):
         self._item = Shape('item')
         self.register_graspable_objects([self._item])
         self._keypoints = [Dummy('keypoint%s' % i) 
-                           for i in range(4)]
+                           for i in range(KEYPOINT_NUM)]
 
     def init_episode(self, index) -> List[str]:
         option = self._options[index]

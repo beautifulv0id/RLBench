@@ -4,7 +4,9 @@ from pyrep.objects.dummy import Dummy
 from pyrep.objects.joint import Joint
 from rlbench.backend.conditions import JointCondition
 from rlbench.backend.task import Task
+from rlbench.backend.observation import Observation
 
+KEYPOINT_NUM = 3
 
 class OpenDrawer(Task):
 
@@ -15,6 +17,8 @@ class OpenDrawer(Task):
         self._joints = [Joint('drawer_joint_%s' % opt)
                         for opt in self._options]
         self._waypoint1 = Dummy('waypoint1')
+        self._keypoints = [Dummy('keypoint%s' % i) 
+                           for i in range(KEYPOINT_NUM)]
 
     def init_episode(self, index: int) -> List[str]:
         option = self._options[index]
@@ -31,3 +35,20 @@ class OpenDrawer(Task):
 
     def base_rotation_bounds(self) -> Tuple[List[float], List[float]]:
         return [0, 0, - np.pi / 8], [0, 0, np.pi / 8]
+
+    def decorate_observation(self, observation: Observation) -> Observation:
+        pcd = []
+        poses = []
+        for keypoint in self._keypoints:
+            H = keypoint.get_matrix()
+            rot, pos = H[:3, :3], H[:3, 3]
+            pcd.append(pos)
+            poses.append(H)
+            for ax in rot:
+                pcd.append(pos + 0.05 * ax)
+                pcd.append(pos - 0.05 * ax)
+        pcd = np.array(pcd)
+        poses = np.array(poses)
+        observation.misc['low_dim_pcd'] = pcd
+        observation.misc['low_dim_poses'] = poses
+        return observation

@@ -13,6 +13,7 @@ import numpy as np
 
 MAX_STACKED_BLOCKS = 3
 DISTRACTORS = 4
+KEYPOINT_NUM = 9
 
 
 class StackBlocks(Task):
@@ -35,7 +36,7 @@ class StackBlocks(Task):
         self.register_waypoint_ability_start(5, self._is_last)
         self.register_waypoints_should_repeat(self._repeat)
         self._keypoints = [Dummy('keypoint%s' % i) 
-                           for i in range(9)]
+                           for i in range(KEYPOINT_NUM)]
 
     def init_episode(self, index: int) -> List[str]:
         # For each color, we want to have 2, 3 or 4 blocks stacked
